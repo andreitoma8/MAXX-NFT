@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 /// @title MAXX NFT Collection
 /// @author Andrei Toma
@@ -23,65 +22,41 @@ contract ERC721Collection is ERC721, Ownable {
     string internal constant USED_URI = "";
 
     // The maximum supply of the collection
-    uint256 public constant MAX_SUPPLY = 300;
+    uint256 public constant MAX_SUPPLY = 120;
 
-    // The address of the MAXX Staking Smart Contract
-    address public immutable stakingContract;
-
-    // The paused state for minting
-    bool public paused = true;
+    // The address of the MAXX Amplify Smart Contract
+    address public immutable amplifyContract;
 
     // Mapping of Token ID to used state
     mapping(uint256 => bool) private usedState;
 
-    /// @notice Sets the MAXX Staking Smart Contract Address, Name and Token for the Collection
-    /// @param  _stakingContract the address of the Staking Smart Contract
-    constructor(address _stakingContract) ERC721("MAXX NFT", "MAXX") {
-        stakingContract = _stakingContract;
-    }
-
-    /// @notice Mint NFTs to the caller of the function if the contract is not paused
-    /// and if there are enough NFTs left to mint
-    /// @param _mintAmount the amount of NFTs to mint
-    function mint(uint256 _mintAmount) external payable {
-        require(!paused, "The contract is paused!");
-        require(
-            supply.current() + _mintAmount <= MAX_SUPPLY,
-            "Max supply exceeded!"
-        );
-        _mintLoop(msg.sender, _mintAmount);
+    /// @notice Sets the MAXX Amplify Smart Contract Address, Name and Token for the Collection
+    /// @param  _amplifyContract the address of the Amplify Smart Contract
+    constructor(address _amplifyContract) ERC721("MAXX NFT", "MAXX") {
+        amplifyContract = _amplifyContract;
     }
 
     /// @notice Mint NFTs function for the owner to airdrop NFTs if there are enough NFTs left
-    /// @param _mintAmount the amount of NFTs to mint
     /// @param _receiver the wallet address to mint to
-    function mintForAddress(uint256 _mintAmount, address _receiver)
-        external
-        onlyOwner
-    {
+    function mintForAddress(address _receiver) external {
         require(
-            supply.current() + _mintAmount <= MAX_SUPPLY,
-            "Max supply exceeded!"
+            msg.sender == amplifyContract,
+            "Only the Amplify Contract can mint NFTs"
         );
-        _mintLoop(_receiver, _mintAmount);
+        require(supply.current() + 1 <= MAX_SUPPLY, "Max supply exceeded!");
+        supply.increment();
+        _safeMint(_receiver, supply.current());
     }
 
-    /// @notice Marks NFT as used after it has been used in the MAXX Staking Contract
+    /// @notice Marks NFT as used after it has been used in the MAXX Amplify Contract
     /// @param _tokenId the Token ID of the NFT to be marked as used
-    /// @dev This function is only callable by the MAXX Staking Contract
+    /// @dev This function is only callable by the MAXX Amplify Contract
     function setUsed(uint256 _tokenId) external {
         require(
-            msg.sender == stakingContract,
-            "Only the Staking Contract can set a token as used"
+            msg.sender == amplifyContract,
+            "Only the Amplify Contract can set a token as used"
         );
         usedState[_tokenId] = true;
-    }
-
-    /// @notice Pauses and unpauses the mint function
-    /// @param _state the paused state of the minting
-    /// @dev Only the owner of the Contract can call this function
-    function setPaused(bool _state) public onlyOwner {
-        paused = _state;
     }
 
     /// @notice Verifies if a NFT is used or not
@@ -146,14 +121,5 @@ contract ERC721Collection is ERC721, Ownable {
     /// @notice Returns the total supply of the collection
     function totalSupply() public view returns (uint256) {
         return supply.current();
-    }
-
-    /// @notice Function used to mint multiple NFTs in one transaction
-    /// @dev supply is incremented before minting so collection starts at Token ID 1
-    function _mintLoop(address _receiver, uint256 _mintAmount) internal {
-        for (uint256 i = 0; i < _mintAmount; i++) {
-            supply.increment();
-            _safeMint(_receiver, supply.current());
-        }
     }
 }
