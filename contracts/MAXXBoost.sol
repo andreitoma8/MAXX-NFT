@@ -7,9 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title MAXX NFT Collection
 /// @author Andrei Toma
-/// @notice Using an NFT from this collection when you stake your MAXX Tokens
-/// will give you APR bonuses, but any NFT can only be used one
-contract ERC721Collection is ERC721, Ownable {
+/// @notice Using an NFT from this collection when you stake your MAXX Tokens will give you APR bonuses. NFTs can be only used one
+contract MAXXBoost is ERC721, Ownable {
     using Strings for uint256;
     using Counters for Counters.Counter;
 
@@ -24,23 +23,30 @@ contract ERC721Collection is ERC721, Ownable {
     // The maximum supply of the collection
     uint256 public constant MAX_SUPPLY = 120;
 
-    // The address of the MAXX Amplify Smart Contract
-    address public immutable amplifyContract;
+    // The address of the MAXX Liquidity Amplifier Smart Contract
+    address public immutable amplifierContract;
+
+    // The address of the MAXX Staking Smart Contract
+    address public immutable stakingContract;
 
     // Mapping of Token ID to used state
     mapping(uint256 => bool) private usedState;
 
     /// @notice Sets the MAXX Amplify Smart Contract Address, Name and Token for the Collection
-    /// @param  _amplifyContract the address of the Amplify Smart Contract
-    constructor(address _amplifyContract) ERC721("MAXX NFT", "MAXX") {
-        amplifyContract = _amplifyContract;
+    /// @param  _amplifierContract the address of the Amplify Smart Contract
+    /// @param  _stakingContract the address of the Amplify Smart Contract
+    constructor(address _amplifierContract, address _stakingContract)
+        ERC721("MAXXBoost", "MAXXB")
+    {
+        amplifierContract = _amplifierContract;
+        stakingContract = _stakingContract;
     }
 
     /// @notice Mint NFTs function for the owner to airdrop NFTs if there are enough NFTs left
     /// @param _receiver the wallet address to mint to
     function mintForAddress(address _receiver) external {
         require(
-            msg.sender == amplifyContract,
+            msg.sender == amplifierContract || msg.sender == stakingContract,
             "Only the Amplify Contract can mint NFTs"
         );
         require(supply.current() + 1 <= MAX_SUPPLY, "Max supply exceeded!");
@@ -48,12 +54,12 @@ contract ERC721Collection is ERC721, Ownable {
         _safeMint(_receiver, supply.current());
     }
 
-    /// @notice Marks NFT as used after it has been used in the MAXX Amplify Contract
+    /// @notice Marks NFT as used after it has been used in the MAXX Amplifier or Staking Contract
     /// @param _tokenId the Token ID of the NFT to be marked as used
     /// @dev This function is only callable by the MAXX Amplify Contract
     function setUsed(uint256 _tokenId) external {
         require(
-            msg.sender == amplifyContract,
+            msg.sender == amplifierContract || msg.sender == stakingContract,
             "Only the Amplify Contract can set a token as used"
         );
         usedState[_tokenId] = true;
@@ -77,22 +83,17 @@ contract ERC721Collection is ERC721, Ownable {
         uint256 ownerTokenCount = balanceOf(_owner);
         uint256[] memory ownedTokenIds = new uint256[](ownerTokenCount);
         uint256 currentTokenId = 1;
-        uint256 ownedTokenIndex = 0;
-
+        uint256 ownedTokenIndex;
         while (
             ownedTokenIndex < ownerTokenCount && currentTokenId <= MAX_SUPPLY
         ) {
             address currentTokenOwner = ownerOf(currentTokenId);
-
             if (currentTokenOwner == _owner) {
                 ownedTokenIds[ownedTokenIndex] = currentTokenId;
-
                 ownedTokenIndex++;
             }
-
             currentTokenId++;
         }
-
         return ownedTokenIds;
     }
 
@@ -110,7 +111,6 @@ contract ERC721Collection is ERC721, Ownable {
             _exists(_tokenId),
             "ERC721Metadata: URI query for nonexistent token"
         );
-
         if (usedState[_tokenId]) {
             return USED_URI;
         } else {
