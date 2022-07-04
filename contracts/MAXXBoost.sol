@@ -16,10 +16,10 @@ contract MAXXBoost is ERC721, Ownable {
     Counters.Counter private supply;
 
     // Token URI for the NFTs available to use for Staking APR Bonus
-    string internal constant AVAILABLE_URI = "";
+    string internal constant AVAILABLE_URI = "available";
 
     // Token URI for used NFTs
-    string internal constant USED_URI = "";
+    string internal constant USED_URI = "used";
 
     // The maximum supply of the collection
     uint256 public constant MAX_SUPPLY = 120;
@@ -53,7 +53,9 @@ contract MAXXBoost is ERC721, Ownable {
         );
         address[] memory participants = ILiquidityAmplifier(amplifierContract)
             .getParticipants();
-        address luckyParticipant = participants[_randomNumber % _randomNumber];
+        address luckyParticipant = participants[
+            _randomNumber % participants.length
+        ];
         supply.increment();
         _safeMint(luckyParticipant, supply.current());
     }
