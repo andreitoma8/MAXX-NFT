@@ -20,8 +20,8 @@ def test_main():
     assert boost.ownerOf(1) == participants[123 % len(participants)]
     boost.mint(7, {"from": owner})
     assert boost.ownerOf(2) == participants[7 % len(participants)]
-    boost.mint(1, {"from": owner})
-    assert boost.ownerOf(3) == accounts[1].address
+    boost.mint(0, {"from": owner})
+    assert boost.ownerOf(3) == accounts[0].address
 
     # Check if NFT is marked as used after Staking
     assert boost.getUsedState(1) == False
