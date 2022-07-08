@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/ILiquidityAmplifier.sol";
 
 /// @title MAXXOG NFT Collection
 /// @author Andrei Toma
@@ -47,6 +46,13 @@ contract MAXXOG is ERC721, Ownable {
         );
         supply.increment();
         _safeMint(_address, supply.current());
+    }
+
+    /// @notice Set the URI for metadata
+    /// @param _uri The URI as a sting
+    /// @dev use in the format: "ipfs://your_uri/"
+    function setUri(string memory _uri) public onlyOwner {
+        uri = _uri;
     }
 
     /// @notice Returns the Token IDs of the NFTs owner by a user
