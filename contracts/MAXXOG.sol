@@ -23,9 +23,6 @@ contract MAXXOG is ERC721, Ownable {
     // The address of the MAXX Staking Smart Contract
     address public immutable stakingContract;
 
-    // Mapping of Token ID to used state
-    mapping(uint256 => bool) private usedState;
-
     /// @notice Sets the MAXX Amplify Smart Contract Address, Name and Token for the Collection
     /// @param  _stakingContract the address of the Amplify Smart Contract
     constructor(address _stakingContract) ERC721("MAXX OG", "MAXXOG") {
