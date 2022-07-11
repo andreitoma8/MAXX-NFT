@@ -15,7 +15,7 @@ contract MAXXOG is ERC721, Ownable {
     Counters.Counter private supply;
 
     // Token URI for the NFTs available to use for Staking APR Bonus
-    string internal uri = "ipfs://.../";
+    string private uri = "ipfs://.../";
 
     // The maximum supply of the collection
     uint256 public constant MAX_SUPPLY = 500;
