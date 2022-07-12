@@ -15,22 +15,32 @@ contract MAXXGenesis is ERC721, Ownable {
 
     Counters.Counter private supply;
 
+    // The maximum supply of the collection
+    uint256 public constant MAX_SUPPLY = 5000;
+
     // Token URI for the NFTs available to use for Staking APR Bonus
     string internal uri = "ipfs://.../";
 
-    // The maximum supply of the collection
-    uint256 public constant MAX_SUPPLY = 5000;
+    // The address of the MAXX Liquidity Amplifier Smart Contract
+    address public immutable amplifierContract;
 
     // Mapping of hashed codes to their availability
     mapping(bytes32 => bool) codes;
 
     /// @notice Sets the Name and Ticker for the Collection
-    constructor() ERC721("MAXX OG", "MAXXOG") {}
+    constructor(address _amplifierContract) ERC721("MAXX OG", "MAXXOG") {
+        amplifierContract = _amplifierContract;
+    }
 
     /// @notice Called by MAXX Staking SC to mint a reward NFT to user that stake >= 10.000.000 MAXX for 3.333 days.
     /// @param _code the code required to redeem the NFT
+    /// @param _user the user address to mint to
     /// @dev supply.increment() is called before _safeMint() to start the collection at tokenId 1
-    function mint(string memory _code) external {
+    function mint(string memory _code, address _user) external {
+        require(
+            msg.sender == amplifierContract,
+            "Only the Liquidity Amplifier contract can call this fuction!"
+        );
         bytes32 hashedCode = keccak256(abi.encodePacked(_code));
         require(codes[hashedCode], "Wrong or used code!");
         codes[hashedCode] = false;
@@ -39,7 +49,7 @@ contract MAXXGenesis is ERC721, Ownable {
             "Maximum supply has been reached!"
         );
         supply.increment();
-        _safeMint(msg.sender, supply.current());
+        _safeMint(_user, supply.current());
     }
 
     /// @notice Set the URI for metadata
