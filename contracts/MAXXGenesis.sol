@@ -70,7 +70,7 @@ contract MAXXGenesis is ERC721, Ownable {
 
     /// @notice Returns the Token IDs of the NFTs owner by a user
     /// @param _owner the address of the user
-    /// @return The Token IDs owned by the address
+    /// @return ownedTokenIds The Token IDs owned by the address
     function tokensOfOwner(address _owner)
         public
         view

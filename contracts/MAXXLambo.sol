@@ -7,6 +7,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+/// @title Contract for NFT tickets that get you a riding experience in MAXX Lambo
+/// @author Andrei Toma
+/// @notice NFTs from this collection can be used to ride around in the MAXX Lambo in Miami and to do this you need to make a reservation in the LamboLock contract
 contract MAXXLambo is ERC721, Ownable {
     using Strings for uint256;
     using Counters for Counters.Counter;
@@ -16,28 +19,26 @@ contract MAXXLambo is ERC721, Ownable {
 
     IERC20 public usdt;
 
-    // The URI of your IPFS/hosting server for the metadata folder.
-    // Used in the format: "ipfs://your_uri/".
+    // The IPFS URI for metadata
     string internal uri = "";
 
-    // Price of one NFT
+    // Cost of one NFT
     uint256 public cost = 100 * 10**18;
 
-    // The maximum supply of your collection
+    // The maximum supply
     uint256 public constant MAX_SUPPLY = 3000;
 
     // The maximum mint amount allowed per transaction
     uint256 public maxMintAmountPerTx = 3;
 
-    // Constructor function that sets name and symbol
-    // of the collection, cost, max supply and the maximum
-    // amount a user can mint per transaction
+    /// @notice initialize the ERC20 interface for USDT
+    /// @param _usdt the address of the USDT Token Contract
     constructor(IERC20 _usdt) ERC721("MAXX Lambo", "LAMBO") {
         usdt = _usdt;
     }
 
-    // Modifier that ensures the maximum supply and
-    // the maximum amount to mint per transaction
+    /// @notice modifier that ensures the maximum supply and the maximum amount to mint per transaction are respected
+    /// @param _mintAmount the amount of NFTs to mint
     modifier mintCompliance(uint256 _mintAmount) {
         require(
             _mintAmount > 0 && _mintAmount <= maxMintAmountPerTx,
@@ -50,30 +51,25 @@ contract MAXXLambo is ERC721, Ownable {
         _;
     }
 
-    // Returns the current supply of the collection
+    /// @notice returns the current supply of the collection
     function totalSupply() public view returns (uint256) {
         return supply.current();
     }
 
-    // Mint function
+    /// @notice the mint function
+    /// @param _mintAmount the amount of NFTs to mint
     function mint(uint256 _mintAmount)
         public
         payable
         mintCompliance(_mintAmount)
     {
-        require(
-            supply.current() + _mintAmount <= MAX_SUPPLY,
-            "Max supply exceeded!"
-        );
-        require(
-            _mintAmount > 0 && _mintAmount <= maxMintAmountPerTx,
-            "Invalid mint amount!"
-        );
         usdt.safeTransferFrom(msg.sender, address(this), cost * _mintAmount);
         _mintLoop(msg.sender, _mintAmount);
     }
 
-    // Returns the Token Id for Tokens owned by the specified address
+    /// @notice returns the Token IDs for Tokens owned by the specified address
+    /// @param _owner the address of the user
+    /// @return ownedTokenIds Token IDs owned by the address
     function walletOfOwner(address _owner)
         public
         view
@@ -101,7 +97,9 @@ contract MAXXLambo is ERC721, Ownable {
         return ownedTokenIds;
     }
 
-    // Returns the Token URI with Metadata for specified Token Id
+    /// @notice Returns the URI used to access the IPFS file containing the NFT Metadata
+    /// @param _tokenId the Token ID of the NFT
+    /// @return uri The URI for the Token ID
     function tokenURI(uint256 _tokenId)
         public
         view
@@ -116,7 +114,8 @@ contract MAXXLambo is ERC721, Ownable {
         return uri;
     }
 
-    // Set the maximum mint amount per transaction
+    /// @notice set the maximum mint amount per transaction
+    /// @param _maxMintAmountPerTx the new maximum amount to set
     function setMaxMintAmountPerTx(uint256 _maxMintAmountPerTx)
         public
         onlyOwner
@@ -124,13 +123,15 @@ contract MAXXLambo is ERC721, Ownable {
         maxMintAmountPerTx = _maxMintAmountPerTx;
     }
 
-    // Withdraw ETH after sale
+    /// @notice withdraw the USDT accumulated form minting
     function withdraw() public onlyOwner {
         uint256 balance = usdt.balanceOf(address(this));
         usdt.safeTransferFrom(address(this), msg.sender, balance);
     }
 
-    // Helper function
+    /// @notice helper loop function for multiple mints in one call
+    /// @param _receiver the address to mint to
+    /// @param _mintAmount the amount of NFTs to mint
     function _mintLoop(address _receiver, uint256 _mintAmount) internal {
         for (uint256 i = 0; i < _mintAmount; i++) {
             supply.increment();
