@@ -32,17 +32,19 @@ contract MAXXOG is ERC721, Ownable {
     /// @notice Called by MAXX Staking SC to mint a reward NFT to user that stake >= 10.000.000 MAXX for 3.333 days.
     /// @param _address the wallet address to mint to
     /// @dev supply.increment() is called before _safeMint() to start the collection at tokenId 1
-    function mint(address _address) external {
+    /// @return bool returns true if supply is still available and NFT is minted, else returns false
+    function mint(address _address) external returns (bool) {
         require(
             msg.sender == stakingContract,
             "Only the Staking contract can mint NFTs~"
         );
-        require(
-            supply.current() + 1 <= MAX_SUPPLY,
-            "Maximum supply has been reached!"
-        );
-        supply.increment();
-        _safeMint(_address, supply.current());
+        if (supply.current() + 1 <= MAX_SUPPLY) {
+            supply.increment();
+            _safeMint(_address, supply.current());
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /// @notice Set the URI for metadata

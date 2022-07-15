@@ -36,20 +36,23 @@ contract MAXXGenesis is ERC721, Ownable {
     /// @param _code the code required to redeem the NFT
     /// @param _user the user address to mint to
     /// @dev supply.increment() is called before _safeMint() to start the collection at tokenId 1
-    function mint(string memory _code, address _user) external {
+    /// @return bool returns true if minting conditions are meet and NFT is minted, else returns false.
+    function mint(string memory _code, address _user) external returns (bool) {
         require(
             msg.sender == amplifierContract,
             "Only the Liquidity Amplifier contract can call this fuction!"
         );
         bytes32 hashedCode = keccak256(abi.encodePacked(_code));
-        require(codes[hashedCode], "Wrong or used code!");
-        codes[hashedCode] = false;
-        require(
-            supply.current() + 1 <= MAX_SUPPLY,
-            "Maximum supply has been reached!"
-        );
-        supply.increment();
-        _safeMint(_user, supply.current());
+        bool codeAvailable = codes[hashedCode];
+        bool supplyAvailable = supply.current() + 1 <= MAX_SUPPLY;
+        if (codeAvailable && supplyAvailable) {
+            codes[hashedCode] = false;
+            supply.increment();
+            _safeMint(_user, supply.current());
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /// @notice Set the URI for metadata
