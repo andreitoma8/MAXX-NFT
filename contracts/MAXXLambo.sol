@@ -19,6 +19,9 @@ contract MAXXLambo is ERC721, Ownable {
 
     IERC20 public usdt;
 
+    // Minting state
+    bool public paused = true;
+
     // The IPFS URI for metadata
     string internal uri = "";
 
@@ -48,6 +51,7 @@ contract MAXXLambo is ERC721, Ownable {
             supply.current() + _mintAmount <= MAX_SUPPLY,
             "Max supply exceeded!"
         );
+        require(!paused, "Minting is not live!");
         _;
     }
 
@@ -121,6 +125,12 @@ contract MAXXLambo is ERC721, Ownable {
         onlyOwner
     {
         maxMintAmountPerTx = _maxMintAmountPerTx;
+    }
+
+    /// @notice pause and unpause the minting
+    /// @param _state bool for paused state
+    function setPaused(bool _state) external onlyOwner {
+        paused = _state;
     }
 
     /// @notice withdraw the USDT accumulated form minting

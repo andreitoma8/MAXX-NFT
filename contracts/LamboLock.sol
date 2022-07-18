@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract LamboLock is Ownable {
     IERC721 maxxLambo;
 
-    uint256 public cycle;
+    uint256 public cycle = 1;
 
     struct Reservation {
         uint256 tokenId;
@@ -82,9 +82,9 @@ contract LamboLock is Ownable {
     function getReservation(uint256 date)
         external
         view
-        returns (Reservation memory)
+        returns (address, Reservation memory)
     {
-        return addressReservations[dateToAddress[date]];
+        return (dateToAddress[date], addressReservations[dateToAddress[date]]);
     }
 
     /// @notice allows the admin to set a date as reserved to not alow any other reservations for it
@@ -104,6 +104,18 @@ contract LamboLock is Ownable {
     /// @notice after most or all the NFTs are used for a ride experience the Owner can move to the next cycle of reservations
     function nextCycle() external onlyOwner {
         cycle++;
+    }
+
+    /// @notice get the next 100 free dates for FE
+    function getFreeDates() external view returns (uint256[] memory) {
+        uint256[] memory freeDates = new uint256[](100);
+        uint256 currentDate = getCurrentDate();
+        for (uint256 i; i < 100; ++i) {
+            if (!reservedDates[currentDate + i]) {
+                freeDates[i] = currentDate + i;
+            }
+        }
+        return freeDates;
     }
 
     /// @notice helper function to get the current date in UNIX fromat converted to days
