@@ -64,3 +64,6 @@ def test_main():
     collection.approve(lock.address, 2, {"from": user})
     with brownie.reverts():
         lock.makeReservation(2, current_day + 10, "user@email.com", {"from": user})
+    # See available dates
+    available_dates = lock.getAvailableDates()
+    print(available_dates)

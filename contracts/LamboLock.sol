@@ -106,16 +106,15 @@ contract LamboLock is Ownable {
         cycle++;
     }
 
-    /// @notice get the next 100 free dates for FE
-    function getFreeDates() external view returns (uint256[] memory) {
-        uint256[] memory freeDates = new uint256[](100);
+    /// @notice get the reserved state for the next 100 dates for FE
+    /// @dev index 0 in the returned array is the current day
+    function getAvailableDates() external view returns (bool[] memory) {
+        bool[] memory dates = new bool[](100);
         uint256 currentDate = getCurrentDate();
         for (uint256 i; i < 100; ++i) {
-            if (!reservedDates[currentDate + i]) {
-                freeDates[i] = currentDate + i;
-            }
+            dates[i] = reservedDates[currentDate + i];
         }
-        return freeDates;
+        return dates;
     }
 
     /// @notice helper function to get the current date in UNIX fromat converted to days
