@@ -8,8 +8,9 @@ def test_main():
     user = accounts[1]
     # Deploy Contracts
     stablecoin = Stablecoin.deploy({"from": owner})
-    collection = MAXXLambo.deploy(stablecoin.address, {"from": owner})
+    collection = MAXXLambo.deploy(stablecoin.address, "zero", "one", {"from": owner})
     lock = LamboLock.deploy(collection.address, {"from": owner})
+    collection.setLamboLock(lock.address, {"from": owner})
     # Fund user with Stablecoins
     stablecoin.transfer(user.address, 10000 * 10**18, {"from": owner})
     # Unpause minting
@@ -25,6 +26,8 @@ def test_main():
     # Mint
     collection.mint(2, {"from": user})
     collection.mint(2, {"from": owner})
+    # Check token uri
+    assert collection.tokenURI(1) == "zero"
     assert collection.balanceOf(user.address) == 2
     # Try to mint more than 3 per tx
     with brownie.reverts():
@@ -49,6 +52,8 @@ def test_main():
     assert reservation == [user.address, [1, current_day + 7, "user@email.com"]]
     # Fulfil reservation
     lock.fulfillReservation(user.address, {"from": owner})
+    # Check if token uri changed after reservation fulfillment
+    assert collection.tokenURI(1) == "one"
     assert collection.balanceOf(user.address) == 2
     # Try to make reservation in the past
     with brownie.reverts():

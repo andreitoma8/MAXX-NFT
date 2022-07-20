@@ -5,7 +5,7 @@ import brownie
 
 def test_main():
     owner = accounts[0]
-    genesis = MAXXGenesis.deploy({"from": owner})
+    genesis = MAXXGenesis.deploy(owner.address,{"from": owner})
     code = "code-104"
     bytes_code = b"code-104"
     print(code)

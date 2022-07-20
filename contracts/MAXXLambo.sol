@@ -17,13 +17,10 @@ contract MAXXLambo is ERC721, Ownable {
 
     Counters.Counter private supply;
 
-    IERC20 public usdt;
+    IERC20 public usdc;
 
     // Minting state
     bool public paused = true;
-
-    // The IPFS URI for metadata
-    string internal uri = "";
 
     // Cost of one NFT
     uint256 public cost = 100 * 10**18;
@@ -34,10 +31,23 @@ contract MAXXLambo is ERC721, Ownable {
     // The maximum mint amount allowed per transaction
     uint256 public maxMintAmountPerTx = 3;
 
-    /// @notice initialize the ERC20 interface for USDT
-    /// @param _usdt the address of the USDT Token Contract
-    constructor(IERC20 _usdt) ERC721("MAXX Lambo", "LAMBO") {
-        usdt = _usdt;
+    // The address of the Lambo Lock contract
+    address public lamboLock;
+
+    // Mapping of token id to how many reservations the NFT was used for
+    mapping(uint256 => uint256) public timesUsed;
+
+    // Mapping of times used to metadata uri to be returned
+    mapping(uint256 => string) public uriMapping;
+
+    /// @notice initialize the ERC20 interface for USDT and the URI for the first and second cycles of reservations
+    /// @param _usdc the address of the USDT Token Contract
+    /// @param _uriZero the URI for metadta to be returned for unused NFTs
+    /// @param _uriOne the URI for metadata to be returned for NFTs with one use
+    constructor(IERC20 _usdc, string memory _uriZero, string memory _uriOne) ERC721("MAXX Lambo", "LAMBO") {
+        usdc = _usdc;
+        uriMapping[0] = _uriZero;
+        uriMapping[1] = _uriOne;
     }
 
     /// @notice modifier that ensures the maximum supply and the maximum amount to mint per transaction are respected
@@ -67,7 +77,7 @@ contract MAXXLambo is ERC721, Ownable {
         payable
         mintCompliance(_mintAmount)
     {
-        usdt.safeTransferFrom(msg.sender, address(this), cost * _mintAmount);
+        usdc.safeTransferFrom(msg.sender, address(this), cost * _mintAmount);
         _mintLoop(msg.sender, _mintAmount);
     }
 
@@ -115,7 +125,13 @@ contract MAXXLambo is ERC721, Ownable {
             _exists(_tokenId),
             "ERC721Metadata: URI query for nonexistent token"
         );
-        return uri;
+        return uriMapping[timesUsed[_tokenId]];
+    }
+
+    /// @notice set the Lambo Lock contract
+    /// @param _address the address of the Lambo Lock contract
+    function setLamboLock(address _address) external onlyOwner {
+        lamboLock = _address;
     }
 
     /// @notice set the maximum mint amount per transaction
@@ -127,6 +143,13 @@ contract MAXXLambo is ERC721, Ownable {
         maxMintAmountPerTx = _maxMintAmountPerTx;
     }
 
+    /// @notice function for the Lambo Lock contract to set an NFT as used once the reservation is complete
+    /// @param _tokenId the token id to be set as used
+    function setUsed(uint256 _tokenId) external {
+        require(msg.sender == lamboLock);
+        timesUsed[_tokenId]++;
+    }
+
     /// @notice pause and unpause the minting
     /// @param _state bool for paused state
     function setPaused(bool _state) external onlyOwner {
@@ -135,8 +158,8 @@ contract MAXXLambo is ERC721, Ownable {
 
     /// @notice withdraw the USDT accumulated form minting
     function withdraw() public onlyOwner {
-        uint256 balance = usdt.balanceOf(address(this));
-        usdt.safeTransferFrom(address(this), msg.sender, balance);
+        uint256 balance = usdc.balanceOf(address(this));
+        usdc.safeTransferFrom(address(this), msg.sender, balance);
     }
 
     /// @notice helper loop function for multiple mints in one call

@@ -9,7 +9,7 @@ def test_main():
     # owner = accounts[0]
     owner = accounts.add(config["wallets"]["from_key"])
     # Deploy
-    genesis = MAXXGenesis.deploy({"from": owner})
+    genesis = MAXXGenesis.deploy(owner.address,{"from": owner})
     # Inport codes from CSV
     with open("codes.txt", newline="") as csvfile:
         rows = csv.reader(csvfile, delimiter=",")
@@ -29,11 +29,12 @@ def test_main():
     for sublist in codes:
         genesis.setCodes(sublist, {"from": owner})
     # Check if contract reverts with wrong code
-    with brownie.reverts():
-        genesis.mint("code-103", {"from": owner})
+    tx1 = genesis.mint("code-103", owner.address, {"from": owner})
+    assert tx1.return_value == False
     # Check if contract mints with right code
-    genesis.mint("U8YdLMPL", {"from": owner})
+    tx2 = genesis.mint("HHkJQlXC", owner.address,{"from": owner})
+    assert tx2.return_value == True
     assert genesis.balanceOf(owner.address) == 1
     # Check if contract reverts with same code used the second time
-    with brownie.reverts():
-        genesis.mint("U8YdLMPL", {"from": owner})
+    tx3 = genesis.mint("HHkJQlXC", owner.address, {"from": owner})
+    assert tx3.return_value == False

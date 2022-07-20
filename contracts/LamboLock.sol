@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "../interfaces/IMAXXLambo.sol";
 
 /// @title Contract for reservations to drive the MAXX Lambo
 /// @author Andrei Toma
 /// @notice Lock your tokens to reserve an available date
 contract LamboLock is Ownable {
-    IERC721 maxxLambo;
+    IMAXXLambo maxxLambo;
 
     uint256 public cycle = 1;
 
@@ -31,7 +31,7 @@ contract LamboLock is Ownable {
 
     /// @notice set the MAXX Lambo address
     /// @param _maxxLambo the address of the Lambo NFT Contract
-    constructor(IERC721 _maxxLambo) {
+    constructor(IMAXXLambo _maxxLambo) {
         maxxLambo = _maxxLambo;
     }
 
@@ -66,6 +66,7 @@ contract LamboLock is Ownable {
     /// @notice called by the admin after the driving experience is completed and the car is returned
     /// @param user the address of the user that completed the driving experience
     function fulfillReservation(address user) external onlyOwner {
+        maxxLambo.setUsed(addressReservations[user].tokenId);
         maxxLambo.transferFrom(
             address(this),
             user,
