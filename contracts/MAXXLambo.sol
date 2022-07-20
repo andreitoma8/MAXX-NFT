@@ -150,6 +150,13 @@ contract MAXXLambo is ERC721, Ownable {
         timesUsed[_tokenId]++;
     }
 
+    /// @notice set the URI for a selected cycle
+    /// @param cycle the cycle to set the URI for
+    /// @param uri the URI for the NFT Metadata
+    function setUri(uint256 cycle, string memory uri) external onlyOwner {
+        uriMapping[cycle] = uri;
+    }
+
     /// @notice pause and unpause the minting
     /// @param _state bool for paused state
     function setPaused(bool _state) external onlyOwner {
