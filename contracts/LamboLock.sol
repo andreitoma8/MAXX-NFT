@@ -45,6 +45,7 @@ contract LamboLock is Ownable {
         string calldata contact
     ) external {
         require(date > getCurrentDate(), "Date out of bounce.");
+        require(maxxLambo.ownerOf(tokenId)==msg.sender, "Caller not owner of the Token.");
         require(!reservedDates[date], "Date is not available.");
         require(
             addressReservations[msg.sender].tokenId == 0,
@@ -108,12 +109,11 @@ contract LamboLock is Ownable {
     }
 
     /// @notice get the reserved state for the next 100 dates for FE
-    /// @dev index 0 in the returned array is the current day
     function getAvailableDates() external view returns (bool[] memory) {
         bool[] memory dates = new bool[](100);
-        uint256 currentDate = getCurrentDate();
+        uint256 tomorrowsDate = getCurrentDate() + 1;
         for (uint256 i; i < 100; ++i) {
-            dates[i] = reservedDates[currentDate + i];
+            dates[i] = reservedDates[tomorrowsDate + i];
         }
         return dates;
     }
