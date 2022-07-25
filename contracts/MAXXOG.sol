@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title MAXXOG NFT Collection
 /// @author Andrei Toma
-/// @notice Using an NFT from this collection when you stake your MAXX Tokens will give you APR bonuses. NFTs can be only used one
+/// @notice This is an NFT rewards collection made for the OGs of the MAXX Ecosystem.
 contract MAXXOG is ERC721, Ownable {
     using Strings for uint256;
     using Counters for Counters.Counter;

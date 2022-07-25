@@ -8,7 +8,7 @@ import "../interfaces/ILiquidityAmplifier.sol";
 
 /// @title MAXX Genesis NFT Collection
 /// @author Andrei Toma
-/// @notice Using an NFT from this collection when you stake your MAXX Tokens will give you APR bonuses. NFTs can be only used one time.
+/// @notice Using a Code from the MAXX Gleam campaign can land you one of these NFTs and a 5% bonus in the Amplifier Allocation. Codes can be only used one time.
 contract MAXXGenesis is ERC721, Ownable {
     using Strings for uint256;
     using Counters for Counters.Counter;

@@ -19,6 +19,7 @@ contract MaxxStake {
             maxxBoost.getUsedState(_tokenId) == false,
             "NFT is already used!"
         );
+        // give boost
         maxxBoost.setUsed(_tokenId);
     }
 }
