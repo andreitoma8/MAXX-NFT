@@ -19,7 +19,7 @@ contract MAXXGenesis is ERC721, Ownable {
     uint256 public constant MAX_SUPPLY = 5000;
 
     // Token URI for the NFTs available to use for Staking APR Bonus
-    string internal uri = "ipfs://.../";
+    string internal uri = "ipfs://...";
 
     // The address of the MAXX Liquidity Amplifier Smart Contract
     address public immutable amplifierContract;
@@ -110,17 +110,8 @@ contract MAXXGenesis is ERC721, Ownable {
             _exists(_tokenId),
             "ERC721Metadata: URI query for nonexistent token"
         );
-        string memory currentBaseURI = _baseURI();
-        return
-            bytes(currentBaseURI).length > 0
-                ? string(
-                    abi.encodePacked(
-                        currentBaseURI,
-                        _tokenId.toString(),
-                        ".json"
-                    )
-                )
-                : "";
+
+        return uri;
     }
 
     /// @notice Returns the total supply of the collection
@@ -128,8 +119,4 @@ contract MAXXGenesis is ERC721, Ownable {
         return supply.current();
     }
 
-    // Helper function
-    function _baseURI() internal view virtual override returns (string memory) {
-        return uri;
-    }
 }
