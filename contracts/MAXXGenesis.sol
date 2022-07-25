@@ -19,10 +19,16 @@ contract MAXXGenesis is ERC721, Ownable {
     uint256 public constant MAX_SUPPLY = 5000;
 
     // Token URI for the NFTs available to use for Staking APR Bonus
-    string internal uri = "ipfs://...";
+    string internal constant AVAILABLE_URI = "available";
+
+    // Token URI for used NFTs
+    string internal constant USED_URI = "used";
 
     // The address of the MAXX Liquidity Amplifier Smart Contract
     address public immutable amplifierContract;
+
+    // Mapping of Token ID to used state
+    mapping(uint256 => bool) private usedState;
 
     // Mapping of hashed codes to their availability
     mapping(bytes32 => bool) codes;
@@ -55,13 +61,6 @@ contract MAXXGenesis is ERC721, Ownable {
         }
     }
 
-    /// @notice Set the URI for metadata
-    /// @param _uri The URI as a sting
-    /// @dev use in the format: "ipfs://your_uri/"
-    function setUri(string memory _uri) external onlyOwner {
-        uri = _uri;
-    }
-
     /// @notice Set the hashed codes that can be used to mint an NFT
     /// @param _codes Array of hashed codes
     function setCodes(bytes32[] calldata _codes) external onlyOwner {
@@ -69,6 +68,24 @@ contract MAXXGenesis is ERC721, Ownable {
         for (uint256 i; i < _length; i++) {
             codes[_codes[i]] = true;
         }
+    }
+
+    /// @notice Marks NFT as used after it has been used in the MAXX Amplifier or Staking Contract
+    /// @param _tokenId the Token ID of the NFT to be marked as used
+    /// @dev This function is only callable by the MAXX Amplify Contract
+    function setUsed(uint256 _tokenId) external {
+        require(
+            msg.sender == amplifierContract,
+            "Only the Amplify Contract can set a token as used"
+        );
+        usedState[_tokenId] = true;
+    }
+
+    /// @notice Verifies if a NFT is used or not
+    /// @param _tokenId the Token ID that is verified
+    /// @return Bool for the used state of the NFT
+    function getUsedState(uint256 _tokenId) external view returns (bool) {
+        return usedState[_tokenId];
     }
 
     /// @notice Returns the Token IDs of the NFTs owner by a user
@@ -110,8 +127,11 @@ contract MAXXGenesis is ERC721, Ownable {
             _exists(_tokenId),
             "ERC721Metadata: URI query for nonexistent token"
         );
-
-        return uri;
+        if (usedState[_tokenId]) {
+            return USED_URI;
+        } else {
+            return AVAILABLE_URI;
+        }
     }
 
     /// @notice Returns the total supply of the collection
